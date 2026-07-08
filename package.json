@@ -11,9 +11,9 @@
         "update:upstream": "node scripts/update-upstream.mjs"
     },
     "devDependencies": {
-        "@types/node": "^20.19.0",
+        "@types/node": "^26.1.1",
         "prettier": "^3.9.4",
-        "typescript": "^5.5.0"
+        "typescript": "^5.9.3"
     },
     "packageManager": "yarn@4.17.0"
 }

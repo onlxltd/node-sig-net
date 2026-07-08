@@ -2,6 +2,14 @@
     "name": "node-sig-net",
     "version": "0.0.1",
     "description": "A native TypeScript/Node implementation of the Sig-Net® protocol SDK.",
+    "author": {
+        "name": "ON LX Limited",
+        "email": "team@onlx.ltd"
+    },
+    "bugs": {
+        "url": "https://github.com/onlxltd/node-sig-net/issues"
+    },
+    "homepage": "https://github.com/onlxltd/node-sig-net",
     "type": "module",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
@@ -24,10 +32,20 @@
         "test": "node --test test/*.test.mjs",
         "update:upstream": "node scripts/update-upstream.mjs"
     },
+    "keywords": [
+        "sig-net",
+        "coap",
+        "dmx512",
+        "typescript"
+    ],
+    "license": "MIT",
     "devDependencies": {
         "@types/node": "^26.1.1",
         "prettier": "^3.9.4",
         "typescript": "^5.9.3"
+    },
+    "engines": {
+        "node": ">=18.17"
     },
     "packageManager": "yarn@4.17.0"
 }

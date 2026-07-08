@@ -1,0 +1,10 @@
+.github
+examples
+scripts
+node_modules
+src
+test
+.prettierignore
+.prettierrc.json
+tsconfig.json
+.yarn/*

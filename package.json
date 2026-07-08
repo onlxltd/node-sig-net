@@ -1,0 +1,18 @@
+{
+    "name": "node-sig-net",
+    "version": "0.0.1",
+    "description": "A native TypeScript/Node implementation of the Sig-Net® protocol SDK.",
+    "type": "module",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "format": "prettier --write .",
+    },
+    "devDependencies": {
+        "@types/node": "^20.19.0",
+        "prettier": "^3.9.4",
+        "typescript": "^5.5.0"
+    },
+    "packageManager": "yarn@4.17.0"
+}

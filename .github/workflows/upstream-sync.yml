@@ -1,0 +1,39 @@
+name: Upstream Sync
+
+on:
+    workflow_dispatch:
+    schedule:
+        - cron: '23 4 * * 1'
+
+permissions:
+    contents: write
+    pull-requests: write
+
+jobs:
+    sync:
+        runs-on: ubuntu-latest
+        steps:
+            -
+                uses: actions/checkout@v4
+            -
+                uses: actions/setup-node@v4
+                with:
+                    node-version: 22
+                    cache: npm
+            -
+                run: yarn update:upstream
+            -
+                run: yarn build
+            -
+                run: yarn test
+            -
+                uses: peter-evans/create-pull-request@v6
+                with:
+                    branch: chore/upstream-sig-net-sync
+                    title: 'chore: sync Sig-Net upstream constants'
+                    commit-message: 'chore: sync Sig-Net upstream constants'
+                    body: |
+                        Automated upstream sync from WayneHowell/public-sig-net-sdk.
+
+                        This regenerates TypeScript constants and runs the existing build/test suite.
+                        Review upstream C++ implementation changes before merging when behavior changed.

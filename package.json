@@ -18,6 +18,8 @@
     ],
     "scripts": {
         "build": "tsc -p tsconfig.json",
+        "example:receiver": "yarn build && node examples/sine-receiver.mjs",
+        "example:sender": "yarn build && node examples/sine-sender.mjs",
         "format": "prettier --write .",
         "test": "node --test test/*.test.mjs",
         "update:upstream": "node scripts/update-upstream.mjs"

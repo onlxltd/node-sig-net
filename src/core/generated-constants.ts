@@ -249,6 +249,26 @@ export const MULTICAST_TIME_IP = '239.254.255.250' // sync + timecode/{stream} -
 export const MULTICAST_NODE_BEACON_IP = '239.254.255.255' // node_beacon/{tuid} -- unprovisioned node beacon
 export const MULTICAST_NODE_LOST_IP = '239.254.255.254' // node_lost/{tuid} -- node leaving network
 
+// SNOW / Sig-Net Recovery Protocol (SNOW Framework Section 9)
+export const SIGNET_URI_SNRP = 'snrp'
+export const TOTW_RT_COME_HOME = 0x7001
+export const TOTW_RT_PUBLIC_KEY = 0x7002
+export const TOTW_RT_IDENTIFY = 0x7003
+export const TOTW_RT_KEY_KS = 0x7004
+export const TOTW_RT_KEY_KC = 0x7005
+export const TOTW_RT_KEY_KM_GLOBAL = 0x7006
+export const TOTW_RT_KEY_KM_LOCAL = 0x7007
+export const TOTW_RT_KEY_K0 = 0x7008
+export const TOTW_RT_POM_PUBLIC_KEY = 0x7009
+export const TOTW_RT_POM_WIPE = 0x700A
+export const TOTW_RT_OTW_REOPEN = 0x700B
+export const TOTW_RT_UPDATE_POM = 0x700C
+export const TOTW_RT_SCOPE = 0x700D
+
+export const SNOW_TLS_MAX_RECORD_SIZE = 2048
+export const SNOW_IDENTIFY_EXPORTER_LABEL = 'EXPORTER-Sig-Net-SNOW-Identify'
+export const SNOW_PIN_EXPORTER_LABEL = 'EXPORTER-Sig-Net-SNOW-PIN'
+
 //------------------------------------------------------------------------------
 // Key Derivation Info Strings (Section 7.3)
 //------------------------------------------------------------------------------

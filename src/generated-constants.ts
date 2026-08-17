@@ -61,7 +61,7 @@ export const COAP_OPTION_EXT8_BASE = 13 // value = ext + 13
 export const COAP_OPTION_EXT16_BASE = 269 // value = ext + 269
 
 // CoAP Payload Marker
-export const COAP_PAYLOAD_MARKER = 0xff
+export const COAP_PAYLOAD_MARKER = 0xFF
 
 //------------------------------------------------------------------------------
 // Sig-Net Custom CoAP Options (Private Use Range 2048-64999)
@@ -80,7 +80,8 @@ export const SIGNET_OPTION_HMAC = 2236 // 32 bytes (HMAC-SHA256)
 //------------------------------------------------------------------------------
 
 export const SECURITY_MODE_HMAC_SHA256 = 0x00 // HMAC-SHA256, plaintext payload
-export const SECURITY_MODE_UNPROVISIONED = 0xff // Unprovisioned beacon mode
+export const SECURITY_MODE_OPEN = 0x01 // Open mode, unauthenticated
+export const SECURITY_MODE_UNPROVISIONED = 0xFF // Unprovisioned beacon mode
 
 //------------------------------------------------------------------------------
 // Sig-Net Type ID (TID) Definitions - Application Layer (Section 11)
@@ -92,6 +93,7 @@ export const SECURITY_MODE_UNPROVISIONED = 0xff // Unprovisioned beacon mode
 // Section 11.1 - Node-Discovery Type Identifiers
 export const TID_POLL = 0x0001 // Poll: request node-discovery replies (25 bytes)
 export const TID_POLL_REPLY = 0x0002 // Poll reply: presence, TUID, SoemCode, CHANGE_COUNT (12 bytes)
+export const TID_SET_REPLY = 0x0003 // Set reply: trailing confirmation TLV, Flags + CHANGE_COUNT (3 bytes)
 
 // Section 11.2 - Sender Type Identifiers
 export const TID_LEVEL = 0x0101 // DMX level data, zero start code (1-512 bytes)
@@ -104,11 +106,13 @@ export const TID_RDM_COMMAND = 0x0301 // Encapsulated E1.20 RDM request from Man
 export const TID_RDM_RESPONSE = 0x0302 // Encapsulated E1.20 RDM response from Node (26-257 bytes)
 export const TID_RDM_TOD_CONTROL = 0x0303 // TOD control: force discovery or flush (1 byte)
 export const TID_RDM_TOD_DATA = 0x0304 // RDM ToD block with packet index/total + UID array (2+N bytes)
-export const TID_RDM_TOD_BACKGROUND = 0x0305 // Enable/disable background RDM discovery (0/1 byte)
+export const TID_RDM_PORT_CONFIG = 0x0305 // Enable/disable background RDM discovery (0/1 byte)
+export const TID_RDM_EP_CONFIG = 0x0305 // Spec name alias for TID_RDM_PORT_CONFIG
 export const TID_RDM_FLOW_CONTROL = 0x0306 // RDM FIFO capacity/availability report (0/2 bytes)
 
 // Section 11.4 - Provisioning Type Identifiers (Root Endpoint only)
 export const TID_RT_UNPROVISION = 0x0401 // Wipe keys and return to unprovisioned state (4 bytes, magic 0x57495045)
+export const TID_RT_OFFBOARD = 0x0401 // Spec name alias for TID_RT_UNPROVISION
 
 // Section 11.5 - Network Configuration Type Identifiers (Root Endpoint only)
 export const TID_NW_MAC_ADDRESS = 0x0501 // Physical MAC address (0/6 bytes)
@@ -134,9 +138,10 @@ export const TID_RT_MULT_OVERRIDE = 0x0606 // Alias: v0.15 section 11.6.6 name f
 export const TID_RT_IDENTIFY = 0x0607 // Identify state: 0x00=Off, 0x01=On (0/1 byte)
 export const TID_RT_STATUS = 0x0608 // Device health bitfield: Bit0=HW Fault, Bit1=Factory, Bit2=Locked (0/4 bytes)
 export const TID_RT_ROLE_CAPABILITY = 0x0609 // Role bitfield: Bit0=Node, Bit1=Sender, Bit2=Manager (0/1 byte)
-export const TID_RT_REBOOT = 0x060a // Reboot command with BOOT magic (5 bytes)
-export const TID_RT_MODEL_NAME = 0x060b // Product model UTF-8 string, max 64 bytes (0/1-64 bytes)
-export const TID_RT_SCOPE = 0x060c // Operational URI scope UTF-8 string, max 32 bytes (0/1-32 bytes)
+export const TID_RT_REBOOT = 0x060A // Reboot command with BOOT magic (5 bytes)
+export const TID_RT_MODEL_NAME = 0x060B // Product model UTF-8 string, max 64 bytes (0/1-64 bytes)
+export const TID_RT_SCOPE = 0x060C // Operational URI scope UTF-8 string, max 32 bytes (0/1-32 bytes)
+export const TID_RT_OTW_CAPABILITY = 0x060D // OTW onboarding capability (0/3 bytes)
 
 // Section 11.7 - Data Endpoint Type Identifiers (Data Endpoints 1-N only)
 export const TID_EP_UNIVERSE = 0x0901 // Assigned universe 1-63999, 0=unset (0/2 bytes)
@@ -149,12 +154,17 @@ export const TID_EP_INPUT_PRIORITY = 0x0906 // Per-slot E1.31-1 priority for inp
 export const TID_EP_STATUS = 0x0907 // Endpoint health bitfield: Bit0=Activity, Bit1=HW Fault, Bit2=Locked (0/4 bytes)
 export const TID_EP_FAILOVER = 0x0908 // Endpoint stream-loss failover mode + optional scene (0/3 bytes)
 export const TID_EP_DMX_TIMING = 0x0909 // Endpoint DMX transmission mode and timing (0/2 bytes)
-export const TID_EP_REFRESH_CAPABILITY = 0x090a // Endpoint max refresh capability in Hz (0/1 byte)
+export const TID_EP_REFRESH_CAPABILITY = 0x090A // Endpoint max refresh capability in Hz (0/1 byte)
+export const TID_EP_PROTOCOL = 0x090B // Endpoint active input protocol (0/1 byte)
+export const TID_EP_IDENTIFY = 0x090C // Endpoint identify state (0/1 byte)
+
+// Additional sender/control identifiers
+export const TID_OSC = 0x0204 // OSC payload wrapper (variable)
 
 // Section 11.8 - Diagnostic Type Identifiers
-export const TID_DG_SECURITY_EVENT = 0xff01 // Security event report: EventCode+Counter+SourceIP (0/11-23 bytes)
-export const TID_DG_MESSAGE = 0xff02 // Human-readable diagnostic message, UTF-8, not null-terminated (0-64 bytes)
-export const TID_DG_LEVEL_FOLDBACK = 0xff03 // Copy of level buffer for the specified universe (0/1-512 bytes)
+export const TID_DG_SECURITY_EVENT = 0xFF01 // Security event report: EventCode+Counter+SourceIP (0/11-23 bytes)
+export const TID_DG_MESSAGE = 0xFF02 // Human-readable diagnostic message, UTF-8, not null-terminated (0-64 bytes)
+export const TID_DG_LEVEL_FOLDBACK = 0xFF03 // Copy of level buffer for the specified universe (0/1-512 bytes)
 
 // Poll query levels (Section 11.9)
 export const QUERY_HEARTBEAT = 0x00
@@ -162,18 +172,22 @@ export const QUERY_CONFIG = 0x01
 export const QUERY_FULL = 0x02
 export const QUERY_EXTENDED = 0x03
 
+// Broadcast endpoint: a poll/GET/SET addressed to 0xFFFF targets every
+// applicable endpoint on the node (Section 10.2.3).
+export const BROADCAST_ENDPOINT = 0xFFFF
+
 //------------------------------------------------------------------------------
 // Network Configuration
 //------------------------------------------------------------------------------
 
 export const SIGNET_UDP_PORT = 5683 // Standard CoAP port
 
-// Multicast address range: 239.254.0.1 - 239.254.0.100
+// Multicast address range: 239.254.0.1 - 239.254.0.109
 export const MULTICAST_BASE_OCTET_0 = 239
 export const MULTICAST_BASE_OCTET_1 = 254
 export const MULTICAST_BASE_OCTET_2 = 0
 export const MULTICAST_MIN_INDEX = 1
-export const MULTICAST_MAX_INDEX = 100
+export const MULTICAST_MAX_INDEX = 109
 
 // Multicast TTL (Time To Live)
 export const MULTICAST_TTL = 32
@@ -224,6 +238,7 @@ export const SIGNET_URI_LEVEL = 'level' // For TID_LEVEL messages
 export const SIGNET_URI_PRIORITY = 'priority' // For TID_PRIORITY messages
 export const SIGNET_URI_SYNC = 'sync' // For TID_SYNC messages
 export const SIGNET_URI_NODE = 'node' // For /node/{tuid}/{endpoint} messages
+export const SIGNET_URI_NODE_LOST = 'node_lost' // For /node_lost/{tuid} Lost-Mode messages
 export const SIGNET_URI_POLL = 'poll' // For /poll discovery messages
 
 // Fixed administrative multicast addresses (Appendix A)
@@ -298,19 +313,26 @@ export const TEST_K0 = '52fcc2e7749f40358ba00b1d557dc11861e89868e139f23014f6a0cf
 export const TEST_PASSPHRASE = 'Ge2p$E$4*A'
 
 //------------------------------------------------------------------------------
-// Test TUID for Development/Testing
-// Format: Manufacturer Code (2 bytes) + Device ID (4 bytes)
-// 'S' 'L' (Singularity) = 0x534C + 000001
 //------------------------------------------------------------------------------
-export const TEST_TUID = '534C00000001'
+// Manufacturer identity - SINGLE SOURCE OF TRUTH.
+// ESTA Manufacturer ID for Singularity (UK) Ltd: 'S' (0x53) 'y' (0x79) = 0x5379.
+// Every SoemCode and TUID manufacturer prefix MUST derive from this constant -
+// never hard-code the manufacturer ID anywhere else.
+//------------------------------------------------------------------------------
+export const SIGNET_MANUFACTURER_ID = 0x5379
+
+// Test TUID for Development/Testing.
+// Format: Manufacturer ID (2 bytes) + Device ID (4 bytes) = 0x5379 + 00000001.
+// (Must match SIGNET_MANUFACTURER_ID above.)
+export const TEST_TUID = '537900000001'
 
 //------------------------------------------------------------------------------
-// SoemCode Assignments (Manufacturer + Product Variant)
+// SoemCode Assignments = (SIGNET_MANUFACTURER_ID << 16) | Product Variant
 //------------------------------------------------------------------------------
-export const SoemCodeNetWorkshop = 0x534c0001
-export const SoemCodeSdkLevelTx = 0x534c0010
-export const SoemCodeSdkPoller = 0x534c0011
-export const SoemCodeSdkNode = 0x534c0012
+export const SoemCodeNetWorkshop = (SIGNET_MANUFACTURER_ID << 16) | 0x0001
+export const SoemCodeSdkLevelTx = (SIGNET_MANUFACTURER_ID << 16) | 0x0010
+export const SoemCodeSdkPoller = (SIGNET_MANUFACTURER_ID << 16) | 0x0011
+export const SoemCodeSdkNode = (SIGNET_MANUFACTURER_ID << 16) | 0x0012
 
 //------------------------------------------------------------------------------
 // Role Capability Bit Positions (TID_RT_ROLE_CAPABILITY, Section 11.6.9)
@@ -358,7 +380,7 @@ export const EP_STATUS_CONFIG_LOCK = 0x00000004 // Bit 2: Configuration locked v
 //------------------------------------------------------------------------------
 
 export const UNPROVISION_MAGIC_WORD = 0x57495045 // ASCII "WIPE" -- required payload for TID_RT_UNPROVISION
-export const REBOOT_MAGIC_WORD = 0x424f4f54 // ASCII "BOOT" -- required prefix for TID_RT_REBOOT
+export const REBOOT_MAGIC_WORD = 0x424F4F54 // ASCII "BOOT" -- required prefix for TID_RT_REBOOT
 
 //------------------------------------------------------------------------------
 // TID Payload Enumerations

@@ -37,7 +37,11 @@ for (const rawLine of header.split(/\r?\n/)) {
     const numeric = trimmed.match(/^static const (?:uint(?:8|16|32)_t|int32_t)\s+([A-Za-z0-9_]+)\s*=\s*([^;]+);\s*(\/\/.*)?$/)
     if (numeric) {
         const [, name, rawValue, comment = ''] = numeric
-        let value = rawValue.trim().replace(/u$/i, '')
+        let value = rawValue
+            .trim()
+            .replace(/u$/i, '')
+            .replace(/\(\(uint32_t\)\s*([A-Za-z_][A-Za-z0-9_]*)\s*<<\s*16\)\s*\|/g, '($1 << 16) |')
+            .replace(/\bstatic_cast<[^>]+>\(([^()]*)\)/g, '($1)')
         if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(value)) continue
         lines.push(`export const ${name} = ${value}${comment ? ` ${comment}` : ''}`)
         exportedCount++

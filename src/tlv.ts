@@ -8,7 +8,8 @@ import {
     TID_POLL,
     TID_POLL_REPLY,
     TID_PRIORITY,
-    TID_RT_FIRMWARE_VERSION,
+    TID_RT_ENDPOINT_COUNT,
+    TID_RT_MULT_OVERRIDE,
     TID_RT_PROTOCOL_VERSION,
     TID_RT_ROLE_CAPABILITY,
     TID_SYNC,
@@ -140,16 +141,15 @@ export function buildStartupAnnouncePayload(args: {
     const payload = new PacketBuffer()
     let result = encodeTidPollReply(payload, args.tuid, args.mfgCode, args.productVariantId, args.changeCount)
     if (result !== SIGNET_SUCCESS) throw new RangeError('invalid announce payload')
-    const version = Buffer.from(args.firmwareVersionString, 'utf8')
-    if (version.length > 64) throw new RangeError('firmware version string too long')
-    const firmware = Buffer.alloc(4 + version.length)
-    firmware.writeUInt32BE(args.firmwareVersionId & 0xffff, 0)
-    version.copy(firmware, 4)
-    result = encodeTlv(payload, TID_RT_FIRMWARE_VERSION, firmware)
-    if (result !== SIGNET_SUCCESS) throw new RangeError('invalid announce payload')
     result = encodeTlv(payload, TID_RT_PROTOCOL_VERSION, Buffer.from([args.protocolVersion & 0xff]))
     if (result !== SIGNET_SUCCESS) throw new RangeError('invalid announce payload')
-    result = encodeTlv(payload, TID_RT_ROLE_CAPABILITY, Buffer.from([args.roleCapabilityBits & 0xff]))
+    const roleCapability = Buffer.alloc(4)
+    roleCapability.writeUInt32BE(args.roleCapabilityBits >>> 0, 0)
+    result = encodeTlv(payload, TID_RT_ROLE_CAPABILITY, roleCapability)
+    if (result !== SIGNET_SUCCESS) throw new RangeError('invalid announce payload')
+    result = encodeTlv(payload, TID_RT_ENDPOINT_COUNT, Buffer.from([0x00, 0x01]))
+    if (result !== SIGNET_SUCCESS) throw new RangeError('invalid announce payload')
+    result = encodeTlv(payload, TID_RT_MULT_OVERRIDE, Buffer.from([0x00]))
     if (result !== SIGNET_SUCCESS) throw new RangeError('invalid announce payload')
     return payload.toBuffer()
 }

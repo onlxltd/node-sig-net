@@ -13,7 +13,7 @@ import { buildDMXPacket, calculateMulticastAddress, deriveSenderKey, parseK0Hex,
 const k0 = parseK0Hex('52fcc2e7749f40358ba00b1d557dc11861e89868e139f23014f6a0cfe59cf173')
 const senderKey = deriveSenderKey(k0)
 const dmxData = Buffer.alloc(512)
-const tuid = parseTuidHex('534C00000001')
+const tuid = parseTuidHex('537900000001')
 
 const packet = buildDMXPacket({
     universe: 517,

@@ -2,10 +2,23 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
     TID_LEVEL,
+    TID_POLL_REPLY,
+    TID_RT_PROTOCOL_VERSION,
+    TID_RT_ROLE_CAPABILITY,
+    TID_RT_ENDPOINT_COUNT,
+    TID_RT_MULT_OVERRIDE,
+    SECURITY_MODE_OPEN,
+    SIGNET_OPTION_SECURITY_MODE,
+    SIGNET_OPTION_SENDER_ID,
+    SIGNET_OPTION_MFG_CODE,
+    SIGNET_OPTION_SESSION_ID,
+    SIGNET_OPTION_SEQ_NUM,
+    SIGNET_OPTION_HMAC,
     TEST_K0,
     TEST_PASSPHRASE,
     TEST_TUID,
     buildDMXPacket,
+    buildAnnouncePacket,
     calculateMulticastAddress,
     deriveCitizenKey,
     deriveK0FromPassphrase,
@@ -13,6 +26,7 @@ import {
     deriveSenderKey,
     parseK0Hex,
     parsePacket,
+    parseSigNetOptions,
     parseTuidHex,
     validatePassphrase,
     verifyPacketHmac,
@@ -49,6 +63,39 @@ test('packet builds, parses, and verifies HMAC', () => {
 })
 
 test('helpers match upstream behavior', () => {
-    assert.equal(calculateMulticastAddress(517), '239.254.0.17')
+    assert.equal(calculateMulticastAddress(517), '239.254.0.81')
     assert.equal(validatePassphrase(TEST_PASSPHRASE), 0)
+})
+
+test('startup announce matches the current upstream TLV set', () => {
+    const k0 = parseK0Hex(TEST_K0)
+    const packet = buildAnnouncePacket({
+        tuid: parseTuidHex(TEST_TUID),
+        mfgCode: 0x5379,
+        productVariantId: 0x0010,
+        firmwareVersionId: 1,
+        firmwareVersionString: 'ignored by v1.08 announce format',
+        protocolVersion: 1,
+        roleCapabilityBits: 0x00000003,
+        changeCount: 7,
+        sessionId: 1,
+        seqNum: 1,
+        citizenKey: deriveCitizenKey(k0),
+        messageId: 2,
+    })
+    const tlvTypes = parsePacket(packet).tlvs.map((tlv) => tlv.typeId)
+    assert.deepEqual(tlvTypes, [TID_POLL_REPLY, TID_RT_PROTOCOL_VERSION, TID_RT_ROLE_CAPABILITY, TID_RT_ENDPOINT_COUNT, TID_RT_MULT_OVERRIDE])
+    assert.equal(parsePacket(packet).tlvs[2].length, 4)
+})
+
+test('open mode requires an empty HMAC option', () => {
+    const options = parseSigNetOptions([
+        { optionNumber: SIGNET_OPTION_SECURITY_MODE, value: Buffer.from([SECURITY_MODE_OPEN]) },
+        { optionNumber: SIGNET_OPTION_SENDER_ID, value: Buffer.alloc(8) },
+        { optionNumber: SIGNET_OPTION_MFG_CODE, value: Buffer.alloc(2) },
+        { optionNumber: SIGNET_OPTION_SESSION_ID, value: Buffer.alloc(4) },
+        { optionNumber: SIGNET_OPTION_SEQ_NUM, value: Buffer.alloc(4) },
+        { optionNumber: SIGNET_OPTION_HMAC, value: Buffer.alloc(0) },
+    ])
+    assert.equal(options.hmac.length, 0)
 })

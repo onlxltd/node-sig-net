@@ -2,6 +2,8 @@ import {
     COAP_CODE_POST,
     COAP_OPTION_URI_PATH,
     HMAC_SHA256_LENGTH,
+    SECURITY_MODE_HMAC_SHA256,
+    SECURITY_MODE_OPEN,
     SECURITY_MODE_UNPROVISIONED,
     SENDER_ID_LENGTH,
     SIGNET_ERROR_INVALID_OPTION,
@@ -73,7 +75,7 @@ export function parseSigNetOptions(rawOptions: readonly { optionNumber: number; 
         mfgCode: 0,
         sessionId: 0,
         seqNum: 0,
-        hmac: Buffer.alloc(HMAC_SHA256_LENGTH),
+        hmac: Buffer.alloc(0),
     }
     const found = new Set<number>()
     for (const option of rawOptions) {
@@ -101,16 +103,21 @@ export function parseSigNetOptions(rawOptions: readonly { optionNumber: number; 
                 out.seqNum = option.value.readUInt32BE(0)
                 break
             case SIGNET_OPTION_HMAC:
-                if (option.value.length !== HMAC_SHA256_LENGTH) throw new RangeError('invalid HMAC option')
+                if (option.value.length !== 0 && option.value.length !== HMAC_SHA256_LENGTH) throw new RangeError('invalid HMAC option')
                 out.hmac = option.value
                 break
         }
     }
     if (!found.has(SIGNET_OPTION_SECURITY_MODE)) throw new RangeError(`Sig-Net option error ${SIGNET_ERROR_INVALID_OPTION}`)
-    if (out.securityMode !== SECURITY_MODE_UNPROVISIONED) {
-        for (const required of [SIGNET_OPTION_SENDER_ID, SIGNET_OPTION_MFG_CODE, SIGNET_OPTION_SESSION_ID, SIGNET_OPTION_SEQ_NUM, SIGNET_OPTION_HMAC]) {
-            if (!found.has(required)) throw new RangeError(`Sig-Net option error ${SIGNET_ERROR_INVALID_OPTION}`)
-        }
+    for (const required of [SIGNET_OPTION_SENDER_ID, SIGNET_OPTION_MFG_CODE, SIGNET_OPTION_SESSION_ID, SIGNET_OPTION_SEQ_NUM, SIGNET_OPTION_HMAC]) {
+        if (!found.has(required)) throw new RangeError(`Sig-Net option error ${SIGNET_ERROR_INVALID_OPTION}`)
+    }
+    if (out.securityMode === SECURITY_MODE_HMAC_SHA256) {
+        if (out.hmac.length !== HMAC_SHA256_LENGTH) throw new RangeError('invalid HMAC option')
+    } else if (out.securityMode === SECURITY_MODE_OPEN || out.securityMode === SECURITY_MODE_UNPROVISIONED) {
+        if (out.hmac.length !== 0) throw new RangeError('invalid HMAC option')
+    } else {
+        throw new RangeError('invalid Security-Mode option')
     }
     return out
 }

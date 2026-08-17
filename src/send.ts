@@ -49,7 +49,7 @@ export interface BuildDMXPacketArgs {
 //------------------------------------------------------------------------------
 export function calculateMulticastAddress(universe: number): string {
     if (universe < MIN_UNIVERSE || universe > MAX_UNIVERSE) throw new RangeError('invalid universe')
-    const index = ((universe - 1) % 100) + 1
+    const index = ((universe - 1) % 109) + 1
     return `239.254.0.${index}`
 }
 
@@ -58,7 +58,7 @@ export function calculateMulticastAddress(universe: number): string {
 //------------------------------------------------------------------------------
 export function getMulticastOctets(universe: number): [number, number, number, number] {
     if (universe < MIN_UNIVERSE || universe > MAX_UNIVERSE) throw new RangeError('invalid universe')
-    return [239, 254, 0, ((universe - 1) % 100) + 1]
+    return [239, 254, 0, ((universe - 1) % 109) + 1]
 }
 
 //------------------------------------------------------------------------------

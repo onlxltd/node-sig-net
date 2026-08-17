@@ -54,6 +54,24 @@ receiver.on('level', ({ universe, dmx }) => console.log(universe, dmx))
 await receiver.start()
 ```
 
+`SigNetGenerator` can create the controller credentials from a passphrase,
+from a machine-transfer K0, or from blank input (which generates a valid
+random passphrase):
+
+```ts
+import { SigNetGenerator } from 'node-sig-net'
+
+const credentials = new SigNetGenerator({
+    mfgCode: 0x5379,
+    key: '', // or a validated passphrase, or a 64-character machine-transfer K0
+})
+
+const sender = new SigNetSender({
+    tuid: credentials.tuid,
+    senderKey: credentials.senderKey,
+})
+```
+
 ## Sine Wave Sender/Receiver
 
 Run the receiver in one terminal:

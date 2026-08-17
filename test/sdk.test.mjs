@@ -81,6 +81,25 @@ test('generator creates an ephemeral TUID and sender key', () => {
     assert.deepEqual(generator.getSenderKey(), generator.senderKey)
 })
 
+test('generator accepts passphrases and machine-transfer K0 keys', () => {
+    const passphraseGenerator = new SigNetGenerator({ mfgCode: 0x5379, key: TEST_PASSPHRASE })
+    assert.equal(passphraseGenerator.keySource, 'passphrase')
+    assert.equal(passphraseGenerator.getK0().toString('hex'), TEST_K0)
+
+    const machineGenerator = new SigNetGenerator({ mfgCode: 0x5379, key: TEST_K0 })
+    assert.equal(machineGenerator.keySource, 'machine-transfer')
+    assert.equal(machineGenerator.senderKey.toString('hex'), passphraseGenerator.senderKey.toString('hex'))
+
+    assert.throws(() => new SigNetGenerator({ mfgCode: 0x5379, key: 'weak' }), /invalid passphrase/)
+})
+
+test('generator creates a valid passphrase when key is blank', () => {
+    const generator = new SigNetGenerator({ mfgCode: 0x5379, key: '' })
+    assert.equal(generator.keySource, 'generated-passphrase')
+    assert.equal(validatePassphrase(generator.passphrase ?? ''), 0)
+    assert.equal(generator.senderKey.length, 32)
+})
+
 test('startup announce matches the current upstream TLV set', () => {
     const k0 = parseK0Hex(TEST_K0)
     const packet = buildAnnouncePacket({

@@ -30,7 +30,7 @@ import {
     parseTuidHex,
     validatePassphrase,
     verifyPacketHmac,
-} from '../dist/index.js'
+} from '../dist/imports.js'
 
 test('README crypto vectors match upstream', () => {
     const k0 = deriveK0FromPassphrase(TEST_PASSPHRASE)

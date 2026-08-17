@@ -9,7 +9,7 @@ import {
     parseK0Hex,
     parsePacket,
     verifyPacketHmac,
-} from '../dist/index.js'
+} from '../../dist/imports.js'
 
 const universe = 1
 const channelCount = 50

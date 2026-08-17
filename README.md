@@ -30,6 +30,30 @@ const packet = buildDMXPacket({
 await sendMulticast(packet, calculateMulticastAddress(517))
 ```
 
+## Sender and Receiver wrappers
+
+For application code, the `SigNetSender` and `SigNetReceiver` wrappers manage
+the UDP socket, controller session, sequence numbers, multicast routing, and
+packet verification while using the existing low-level Sig-Net implementation:
+
+```ts
+import { SigNetReceiver, SigNetSender, deriveSenderKey, parseK0Hex, parseTuidHex, TEST_K0, TEST_TUID } from 'node-sig-net'
+
+const sender = new SigNetSender({
+    tuid: parseTuidHex(TEST_TUID),
+    senderKey: deriveSenderKey(parseK0Hex(TEST_K0)),
+})
+await sender.bind()
+await sender.sendDmx(Buffer.alloc(512), 1)
+
+const receiver = new SigNetReceiver({
+    senderKey: deriveSenderKey(parseK0Hex(TEST_K0)),
+    universes: [1],
+})
+receiver.on('level', ({ universe, dmx }) => console.log(universe, dmx))
+await receiver.start()
+```
+
 ## Sine Wave Sender/Receiver
 
 Run the receiver in one terminal:

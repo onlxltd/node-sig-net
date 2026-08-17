@@ -24,13 +24,14 @@ import {
     deriveK0FromPassphrase,
     deriveManagerGlobalKey,
     deriveSenderKey,
+    SigNetGenerator,
     parseK0Hex,
     parsePacket,
     parseSigNetOptions,
     parseTuidHex,
     validatePassphrase,
     verifyPacketHmac,
-} from '../dist/imports.js'
+} from '../dist/index.js'
 
 test('README crypto vectors match upstream', () => {
     const k0 = deriveK0FromPassphrase(TEST_PASSPHRASE)
@@ -65,6 +66,19 @@ test('packet builds, parses, and verifies HMAC', () => {
 test('helpers match upstream behavior', () => {
     assert.equal(calculateMulticastAddress(517), '239.254.0.81')
     assert.equal(validatePassphrase(TEST_PASSPHRASE), 0)
+})
+
+test('generator creates an ephemeral TUID and sender key', () => {
+    const generator = new SigNetGenerator({
+        mfgCode: 0x5379,
+        k0: parseK0Hex(TEST_K0),
+    })
+
+    assert.equal(generator.tuid.length, 6)
+    assert.equal(generator.tuid.readUInt16BE(0), 0x5379)
+    assert.equal(generator.senderKey.toString('hex'), '78981fe02576b2e9e47d916853d5967f34f8ae8aaae46db0495b178a75620e89')
+    assert.deepEqual(generator.getTuid(), generator.tuid)
+    assert.deepEqual(generator.getSenderKey(), generator.senderKey)
 })
 
 test('startup announce matches the current upstream TLV set', () => {

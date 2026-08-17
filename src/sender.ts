@@ -58,7 +58,7 @@ export class SigNetSender extends EventEmitter {
         for (const [universe, fps] of Object.entries(options.universeFps ?? {})) this.setUniverseFps(Number(universe), fps)
     }
 
-    async bind(): Promise<void> {
+    async start(): Promise<void> {
         if (this.bound) return
         this.socket.on('error', (error) => this.emit('error', error))
         await new Promise<void>((resolve, reject) => {

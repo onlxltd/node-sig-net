@@ -43,7 +43,7 @@ const sender = new SigNetSender({
     tuid: parseTuidHex(TEST_TUID),
     senderKey: deriveSenderKey(parseK0Hex(TEST_K0)),
 })
-await sender.bind()
+await sender.start()
 await sender.sendDmx(Buffer.alloc(512), 1)
 
 const receiver = new SigNetReceiver({

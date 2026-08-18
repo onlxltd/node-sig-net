@@ -1,5 +1,6 @@
 export * from './core/sender.js'
 export * from './core/receiver.js'
+export * from './core/node.js'
 export * from './core/generator.js'
 export * from './core/imports.js'
 export * from './snow/index.js'

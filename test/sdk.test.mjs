@@ -19,6 +19,14 @@ import {
     TEST_TUID,
     buildDMXPacket,
     buildAnnouncePacket,
+    buildNodeLostPacket,
+    buildManagerPacket,
+    buildGetPayload,
+    buildPollPacket,
+    buildPollPayload,
+    deriveManagerLocalKey,
+    parseTidPoll,
+    parseTidSetReply,
     calculateMulticastAddress,
     deriveCitizenKey,
     deriveK0FromPassphrase,
@@ -125,6 +133,66 @@ test('startup announce matches the current upstream TLV set', () => {
     const tlvTypes = parsePacket(packet).tlvs.map((tlv) => tlv.typeId)
     assert.deepEqual(tlvTypes, [TID_POLL_REPLY, TID_RT_PROTOCOL_VERSION, TID_RT_ROLE_CAPABILITY, TID_RT_ENDPOINT_COUNT, TID_RT_MULT_OVERRIDE])
     assert.equal(parsePacket(packet).tlvs[2].length, 4)
+})
+
+test('lost-mode announcement uses the node_lost URI', () => {
+    const k0 = parseK0Hex(TEST_K0)
+    const packet = buildNodeLostPacket({
+        tuid: parseTuidHex(TEST_TUID),
+        mfgCode: 0x5379,
+        productVariantId: 0x0010,
+        firmwareVersionId: 1,
+        firmwareVersionString: '1.0.0',
+        protocolVersion: 1,
+        roleCapabilityBits: 1,
+        changeCount: 0,
+        sessionId: 1,
+        seqNum: 1,
+        citizenKey: deriveCitizenKey(k0),
+        messageId: 3,
+    })
+    assert.equal(parsePacket(packet).uri, `/sig-net/v1/local/node_lost/${TEST_TUID}/0`)
+})
+
+test('manager commands use the manager lane and local manager key', () => {
+    const k0 = parseK0Hex(TEST_K0)
+    const managerTuid = parseTuidHex(TEST_TUID)
+    const targetTuid = parseTuidHex('537900000002')
+    const packet = buildManagerPacket({
+        managerTuid,
+        targetTuid,
+        targetEndpoint: 0,
+        payload: buildGetPayload(TID_RT_PROTOCOL_VERSION),
+        sessionId: 2,
+        seqNum: 1,
+        managerLocalKey: deriveManagerLocalKey(k0, targetTuid),
+        messageId: 4,
+    })
+    const parsed = parsePacket(packet)
+    assert.equal(parsed.uri, '/sig-net/v1/local/manager/537900000002/0')
+    assert.equal(verifyPacketHmac(parsed.uri, parsed.options, parsed.payload, deriveManagerLocalKey(k0, targetTuid)), 0)
+    assert.equal(parsed.tlvs[0].length, 0)
+})
+
+test('poll and set-reply TLVs decode their network-order fields', () => {
+    const managerTuid = parseTuidHex(TEST_TUID)
+    const poll = parseTidPoll(parsePacket(buildPollPacket({
+        managerTuid,
+        mfgCode: 0x5379,
+        productVariantId: 0x0010,
+        tuidLo: parseTuidHex('537900000001'),
+        tuidHi: parseTuidHex('5379000000ff'),
+        targetEndpoint: 0xffff,
+        queryLevel: 2,
+        sessionId: 1,
+        seqNum: 1,
+        managerGlobalKey: deriveManagerGlobalKey(parseK0Hex(TEST_K0)),
+        messageId: 5,
+    })).tlvs[0].value)
+    assert.equal(poll.targetEndpoint, 0xffff)
+    assert.equal(poll.queryLevel, 2)
+    assert.equal(poll.mfgCode, 0x5379)
+    assert.deepEqual(parseTidSetReply(Buffer.from([0, 0x12, 0x34])), { flags: 0, changeCount: 0x1234 })
 })
 
 test('open mode requires an empty HMAC option', () => {

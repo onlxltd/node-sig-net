@@ -8,9 +8,11 @@ import {
     TID_POLL,
     TID_POLL_REPLY,
     TID_PRIORITY,
+    TID_SET_REPLY,
+    TID_RT_FIRMWARE_VERSION,
+    TID_RT_PROTOCOL_VERSION,
     TID_RT_ENDPOINT_COUNT,
     TID_RT_MULT_OVERRIDE,
-    TID_RT_PROTOCOL_VERSION,
     TID_RT_ROLE_CAPABILITY,
     TID_SYNC,
     TUID_LENGTH,
@@ -50,6 +52,7 @@ export function encodeTidLevel(buffer: PacketBuffer, dmxData: Uint8Array): numbe
 //------------------------------------------------------------------------------
 export function encodeTidPriority(buffer: PacketBuffer, priorityData: Uint8Array): number {
     if (!priorityData || priorityData.length < 1 || priorityData.length > MAX_DMX_SLOTS) return SIGNET_ERROR_INVALID_ARG
+    if (priorityData.some((priority) => priority > 200)) return SIGNET_ERROR_INVALID_ARG
     return encodeTlv(buffer, TID_PRIORITY, priorityData)
 }
 
@@ -97,6 +100,32 @@ export function encodeTidPollReply(buffer: PacketBuffer, tuid: Uint8Array, mfgCo
     return encodeTlv(buffer, TID_POLL_REPLY, value)
 }
 
+export function encodeTidSetReply(buffer: PacketBuffer, changeCount: number, flags = 0): number {
+    const value = Buffer.alloc(3)
+    value[0] = flags & 0xff
+    value.writeUInt16BE(changeCount & 0xffff, 1)
+    return encodeTlv(buffer, TID_SET_REPLY, value)
+}
+
+export function encodeTidFirmwareVersion(buffer: PacketBuffer, machineVersionId: number, versionString: string): number {
+    const text = Buffer.from(versionString ?? '', 'utf8')
+    if (text.length > 64) return SIGNET_ERROR_INVALID_ARG
+    const value = Buffer.alloc(4 + text.length)
+    value.writeUInt32BE(machineVersionId >>> 0, 0)
+    text.copy(value, 4)
+    return encodeTlv(buffer, TID_RT_FIRMWARE_VERSION, value)
+}
+
+export function encodeTidProtocolVersion(buffer: PacketBuffer, protocolVersion: number): number {
+    return encodeTlv(buffer, TID_RT_PROTOCOL_VERSION, Buffer.from([protocolVersion & 0xff]))
+}
+
+export function encodeTidRoleCapability(buffer: PacketBuffer, roleCapabilityBits: number): number {
+    const value = Buffer.alloc(4)
+    value.writeUInt32BE(roleCapabilityBits >>> 0, 0)
+    return encodeTlv(buffer, TID_RT_ROLE_CAPABILITY, value)
+}
+
 //------------------------------------------------------------------------------
 // Build DMX Payload (TID_LEVEL)
 //------------------------------------------------------------------------------
@@ -122,6 +151,15 @@ export function buildPollPayload(
     const payload = new PacketBuffer()
     const result = encodeTidPoll(payload, managerTuid, mfgCode, productVariantId, tuidLo, tuidHi, targetEndpoint, queryLevel)
     if (result !== SIGNET_SUCCESS) throw new RangeError('invalid poll payload')
+    return payload.toBuffer()
+}
+
+export function buildPayload(tlvs: readonly { typeId: number; value?: Uint8Array }[]): Buffer {
+    const payload = new PacketBuffer()
+    for (const tlv of tlvs) {
+        const result = encodeTlv(payload, tlv.typeId, tlv.value ?? Buffer.alloc(0))
+        if (result !== SIGNET_SUCCESS) throw new RangeError('payload is too large')
+    }
     return payload.toBuffer()
 }
 

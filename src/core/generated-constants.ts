@@ -237,7 +237,9 @@ export const SIGNET_URI_SCOPE_MAX_LENGTH = 32
 export const SIGNET_URI_LEVEL = 'level' // For TID_LEVEL messages
 export const SIGNET_URI_PRIORITY = 'priority' // For TID_PRIORITY messages
 export const SIGNET_URI_SYNC = 'sync' // For TID_SYNC messages
+export const SIGNET_URI_TIMECODE = 'timecode' // For TID_TIMECODE messages
 export const SIGNET_URI_NODE = 'node' // For /node/{tuid}/{endpoint} messages
+export const SIGNET_URI_MANAGER = 'manager' // For manager-to-node commands
 export const SIGNET_URI_NODE_LOST = 'node_lost' // For /node_lost/{tuid} Lost-Mode messages
 export const SIGNET_URI_POLL = 'poll' // For /poll discovery messages
 

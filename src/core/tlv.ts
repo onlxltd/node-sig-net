@@ -15,6 +15,7 @@ import {
     TID_RT_MULT_OVERRIDE,
     TID_RT_ROLE_CAPABILITY,
     TID_SYNC,
+    TID_TIMECODE,
     TUID_LENGTH,
 } from './constants.js'
 import type { TLVBlock } from './types.js'
@@ -61,6 +62,12 @@ export function encodeTidPriority(buffer: PacketBuffer, priorityData: Uint8Array
 //------------------------------------------------------------------------------
 export function encodeTidSync(buffer: PacketBuffer): number {
     return encodeTlv(buffer, TID_SYNC)
+}
+
+export function encodeTidTimecode(buffer: PacketBuffer, hours: number, minutes: number, seconds: number, frames: number, type: number): number {
+    if (![hours, minutes, seconds, frames, type].every(Number.isInteger) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59 || frames < 0 || frames > 255 || type < 0 || type > 3)
+        return SIGNET_ERROR_INVALID_ARG
+    return encodeTlv(buffer, TID_TIMECODE, Buffer.from([hours, minutes, seconds, frames, type]))
 }
 
 //------------------------------------------------------------------------------
@@ -136,6 +143,18 @@ export function buildDmxLevelPayload(dmxData: Uint8Array): Buffer {
     return payload.toBuffer()
 }
 
+export function buildPriorityPayload(priorityData: Uint8Array): Buffer {
+    const payload = new PacketBuffer()
+    if (encodeTidPriority(payload, priorityData) !== SIGNET_SUCCESS) throw new RangeError('invalid priority data')
+    return payload.toBuffer()
+}
+
+export function buildSyncPayload(): Buffer {
+    const payload = new PacketBuffer()
+    if (encodeTidSync(payload) !== SIGNET_SUCCESS) throw new Error('unable to build sync payload')
+    return payload.toBuffer()
+}
+
 //------------------------------------------------------------------------------
 // Build Poll Payload (single TID_POLL TLV)
 //------------------------------------------------------------------------------
@@ -208,4 +227,37 @@ export function parseTlvs(payload: Uint8Array): TLVBlock[] {
         pos += length
     }
     return tlvs
+}
+
+export interface ParsedPoll {
+    managerTuid: Buffer
+    mfgCode: number
+    productVariantId: number
+    tuidLo: Buffer
+    tuidHi: Buffer
+    targetEndpoint: number
+    queryLevel: number
+}
+
+export function parseTidPoll(value: Uint8Array): ParsedPoll {
+    if (value.length !== 25) throw new RangeError('TID_POLL must be 25 bytes')
+    const data = Buffer.from(value)
+    const soemCode = data.readUInt32BE(6)
+    const queryLevel = data[24]!
+    if (queryLevel > QUERY_EXTENDED) throw new RangeError('invalid poll query level')
+    return {
+        managerTuid: data.subarray(0, 6),
+        mfgCode: soemCode >>> 16,
+        productVariantId: soemCode & 0xffff,
+        tuidLo: data.subarray(10, 16),
+        tuidHi: data.subarray(16, 22),
+        targetEndpoint: data.readUInt16BE(22),
+        queryLevel,
+    }
+}
+
+export function parseTidSetReply(value: Uint8Array): { flags: number; changeCount: number } {
+    if (value.length !== 3) throw new RangeError('TID_SET_REPLY must be 3 bytes')
+    const data = Buffer.from(value)
+    return { flags: data[0]!, changeCount: data.readUInt16BE(1) }
 }

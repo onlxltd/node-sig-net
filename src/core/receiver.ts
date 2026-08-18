@@ -1,6 +1,6 @@
 import dgram from 'dgram'
 import { EventEmitter } from 'events'
-import { MULTICAST_MAX_INDEX, SIGNET_SUCCESS, SIGNET_UDP_PORT, TID_LEVEL, TID_SYNC } from './constants.js'
+import { MULTICAST_MAX_INDEX, SIGNET_SUCCESS, SIGNET_UDP_PORT, TID_LEVEL, TID_PRIORITY, TID_SYNC, TID_TIMECODE } from './constants.js'
 import { parsePacket } from './parse.js'
 import { verifyPacketHmac } from './security.js'
 
@@ -12,6 +12,14 @@ export type SigNetLevelMessage = {
     sequence: number
     sessionId: number
     dmx: Buffer
+    packet: ReturnType<typeof parsePacket>
+}
+export type SigNetPriorityMessage = Omit<SigNetLevelMessage, 'dmx'> & { priority: Buffer }
+export type SigNetTimecodeMessage = {
+    fromIp: string
+    fromPort: number
+    stream: number
+    timecode: Buffer
     packet: ReturnType<typeof parsePacket>
 }
 export type SigNetReceiverOptions = {
@@ -27,6 +35,8 @@ export type SigNetReceiverOptions = {
 export declare interface SigNetReceiver {
     on(event: 'level', listener: (message: SigNetLevelMessage) => void): this
     on(event: 'sync', listener: (message: { fromIp: string; packet: ReturnType<typeof parsePacket> }) => void): this
+    on(event: 'priority', listener: (message: SigNetPriorityMessage) => void): this
+    on(event: 'timecode', listener: (message: SigNetTimecodeMessage) => void): this
     on(event: 'packet', listener: (packet: ReturnType<typeof parsePacket>, fromIp: string) => void): this
     on(event: 'error', listener: (error: Error) => void): this
 }
@@ -104,7 +114,31 @@ export class SigNetReceiver extends EventEmitter {
                 dmx: level.value,
                 packet,
             })
-        } else if (packet.tlvs.some((tlv) => tlv.typeId === TID_SYNC)) this.emit('sync', { fromIp, packet })
+        } else if (segments[4] === 'priority') {
+            const universe = Number(segments[5])
+            if (!Number.isInteger(universe)) return
+            if (this.options.universes && !this.options.universes.includes(universe)) return
+            const key = this.keyFor(packet.options.senderId.toString('hex'))
+            if (this.options.verifyHmac && (!key || verifyPacketHmac(packet.uri, packet.options, packet.payload, key) !== SIGNET_SUCCESS)) return
+            const priority = packet.tlvs.find((tlv) => tlv.typeId === TID_PRIORITY)
+            if (!priority) return
+            this.emit('packet', packet, fromIp)
+            this.emit('priority', { fromIp, fromPort, universe, endpoint: packet.options.senderId.readUInt16BE(6), sequence: packet.options.seqNum, sessionId: packet.options.sessionId, priority: priority.value, packet })
+        } else if (segments[4] === 'timecode') {
+            const stream = Number(segments[5])
+            if (!Number.isInteger(stream)) return
+            const key = this.keyFor(packet.options.senderId.toString('hex'))
+            if (this.options.verifyHmac && (!key || verifyPacketHmac(packet.uri, packet.options, packet.payload, key) !== SIGNET_SUCCESS)) return
+            const timecode = packet.tlvs.find((tlv) => tlv.typeId === TID_TIMECODE)
+            if (!timecode) return
+            this.emit('packet', packet, fromIp)
+            this.emit('timecode', { fromIp, fromPort, stream, timecode: timecode.value, packet })
+        } else if (packet.tlvs.some((tlv) => tlv.typeId === TID_SYNC)) {
+            const key = this.keyFor(packet.options.senderId.toString('hex'))
+            if (this.options.verifyHmac && (!key || verifyPacketHmac(packet.uri, packet.options, packet.payload, key) !== SIGNET_SUCCESS)) return
+            this.emit('packet', packet, fromIp)
+            this.emit('sync', { fromIp, packet })
+        }
     }
 
     private keyFor(senderId: string): Uint8Array | undefined {

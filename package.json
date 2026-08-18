@@ -31,6 +31,11 @@
         "example:generator": "yarn build && node examples/generator.mjs",
         "example:snow-controller": "yarn build && node examples/snow-controller.mjs",
         "example:snow-beacon": "yarn build && node examples/snow-beacon.mjs",
+        "example:snow-cert-generator": "yarn build && node examples/snow-cert-generator.mjs",
+        "example:snow-device": "yarn build && node examples/snow-tls-device.mjs",
+        "example:snow-persistent-device": "yarn build && node examples/snow-persistent-device.mjs",
+        "example:snow-provisioner": "yarn build && node examples/snow-provisioner.mjs",
+        "example:snow-recovery": "yarn build && node examples/snow-recovery.mjs",
         "format": "prettier --write .",
         "test": "node --test test/*.test.mjs",
         "update:upstream": "node scripts/update-upstream.mjs"

@@ -29,6 +29,8 @@
         "example:receiver": "yarn build && node examples/sine-receiver.mjs",
         "example:sender": "yarn build && node examples/sine-sender.mjs",
         "example:generator": "yarn build && node examples/generator.mjs",
+        "example:snow-controller": "yarn build && node examples/snow-controller.mjs",
+        "example:snow-beacon": "yarn build && node examples/snow-beacon.mjs",
         "format": "prettier --write .",
         "test": "node --test test/*.test.mjs",
         "update:upstream": "node scripts/update-upstream.mjs"

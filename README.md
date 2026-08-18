@@ -72,6 +72,40 @@ const sender = new SigNetSender({
 })
 ```
 
+## Optional SNOW discovery
+
+SNOW support is exposed separately from the real-time sender and receiver
+wrappers. A `SnowController` can listen for unprovisioned device beacons
+without changing how `SigNetSender` or `SigNetReceiver` are initialised:
+
+```ts
+import { SnowController, parseTuidHex } from 'node-sig-net'
+
+const snow = new SnowController({
+    managerTuid: parseTuidHex('537900000001'),
+    mfgCode: 0x5379,
+})
+snow.on('deviceDiscovered', device => console.log(device.tuid, device.ip))
+await snow.start()
+```
+
+The current SNOW layer provides local-scope SNRP packet and TOTW TLV
+primitives plus discovery. TLS onboarding, authentication, and key delivery
+will be added without making SNOW a requirement for core Sig-Net use.
+
+For local testing, run a beacon publisher and one or more controllers in
+separate terminals:
+
+```sh
+yarn example:snow-beacon
+SNOW_INSTANCE=1 yarn example:snow-controller
+SNOW_INSTANCE=2 yarn example:snow-controller
+```
+
+Controllers use `reuseAddr`, so multiple instances can listen on the same UDP
+port. Set `SNOW_TUID`, `SNOW_PORT`, `SNOW_OTW_PORT`, or `SIGNET_IFACE` to
+customise the test network.
+
 ## Sine Wave Sender/Receiver
 
 Run the receiver in one terminal:

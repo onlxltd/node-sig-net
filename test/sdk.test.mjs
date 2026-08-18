@@ -31,6 +31,12 @@ import {
     parseTuidHex,
     validatePassphrase,
     verifyPacketHmac,
+    buildComeHomeTlv,
+    buildIdentifyTlv,
+    buildSnowSNRPPacket,
+    parseTlvs,
+    TOTW_RT_COME_HOME,
+    TOTW_RT_IDENTIFY,
 } from '../dist/index.js'
 
 test('README crypto vectors match upstream', () => {
@@ -131,4 +137,17 @@ test('open mode requires an empty HMAC option', () => {
         { optionNumber: SIGNET_OPTION_HMAC, value: Buffer.alloc(0) },
     ])
     assert.equal(options.hmac.length, 0)
+})
+
+test('SNOW SNRP packets use the universal local scope and unprovisioned mode', () => {
+    const managerTuid = parseTuidHex(TEST_TUID)
+    const payload = Buffer.concat([
+        buildComeHomeTlv(managerTuid, Buffer.from([192, 168, 1, 20]), Buffer.from([255, 255, 255, 0]), Buffer.from([192, 168, 1, 1])),
+        buildIdentifyTlv(Buffer.alloc(32, 0x42)),
+    ])
+    const packet = parsePacket(buildSnowSNRPPacket({ managerTuid, mfgCode: 0x5379, tlvs: payload }))
+    assert.equal(packet.uri, '/sig-net/v1/local/snrp')
+    assert.equal(packet.options.securityMode, 0xff)
+    assert.equal(packet.options.hmac.length, 0)
+    assert.deepEqual(parseTlvs(packet.payload).map((tlv) => tlv.typeId), [TOTW_RT_COME_HOME, TOTW_RT_IDENTIFY])
 })

@@ -89,9 +89,9 @@ snow.on('deviceDiscovered', device => console.log(device.tuid, device.ip))
 await snow.start()
 ```
 
-The current SNOW layer provides local-scope SNRP packet and TOTW TLV
-primitives plus discovery. TLS onboarding, authentication, and key delivery
-will be added without making SNOW a requirement for core Sig-Net use.
+The SNOW layer provides local-scope SNRP/TOTW packet primitives, discovery,
+CoAP-over-TCP framing, TLS sessions, and a provisioning orchestrator. SNOW
+remains optional and is not required for core Sig-Net use.
 
 For local testing, run a beacon publisher and one or more controllers in
 separate terminals:
@@ -105,6 +105,36 @@ SNOW_INSTANCE=2 yarn example:snow-controller
 Controllers use `reuseAddr`, so multiple instances can listen on the same UDP
 port. Set `SNOW_TUID`, `SNOW_PORT`, `SNOW_OTW_PORT`, or `SIGNET_IFACE` to
 customise the test network.
+
+### Local TLS provisioning test
+
+Create a local certificate and run the TLS device and provisioner in separate
+terminals:
+
+```sh
+yarn example:snow-cert-generator
+yarn example:snow-persistent-device
+SNOW_ROLE=sender yarn example:snow-provisioner
+```
+
+Set `SNOW_CERT_DIR=./.snow-test` to place generated credentials in a
+dedicated directory. The generator creates the device TLS credentials and a
+secp256r1 manager POM keypair for recovery examples.
+
+The persistent device atomically writes `snow-device-state.json`, closes the
+TLS session only after the key bundle is stored, and can transition to the
+core UDP sender/node with `SNOW_AUTO_START=1`. The lower-level
+`example:snow-device` remains available as a raw framing harness.
+
+SNRP recovery helpers are available through `SnowController`:
+
+```sh
+yarn example:snow-recovery
+```
+
+`comeHome()` is intentionally unauthenticated as specified by SNOW. POM wipe
+and OTW reopen require a caller-provided protocol signature and are exposed as
+`pomWipe()` and `otwReopen()`.
 
 ## Sine Wave Sender/Receiver
 

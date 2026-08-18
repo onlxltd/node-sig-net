@@ -36,3 +36,11 @@ export interface SnowBeaconArgs {
     seqNum?: number
     messageId?: number
 }
+
+export interface SnowProvisioningOptions {
+    role: SnowDeviceRole
+    authentication: 'manifest' | 'tofu' | 'pin'
+    scope?: string
+    equalManager?: boolean
+    confirm?: (details: { tuid: Buffer; publicKey: Buffer; pin?: string }) => Promise<boolean> | boolean
+}

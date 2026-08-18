@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 
 export interface SnowManifestDevice {
     tuid: string
-    publicKey: string
+    public_key: string
 }
 
 export interface SnowManifest {

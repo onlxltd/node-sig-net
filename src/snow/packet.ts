@@ -9,6 +9,16 @@ export function buildSnowSNRPPacket(args: SnowPacketArgs): Buffer {
     return buildSnowPacket(args, [SIGNET_URI_PREFIX, SIGNET_URI_VERSION, SIGNET_URI_SCOPE_DEFAULT, 'snrp'])
 }
 
+export function buildSnowManagerPacket(args: SnowPacketArgs & { targetTuid: Uint8Array }): Buffer {
+    if (args.targetTuid.length !== 6) throw new RangeError('targetTuid must be 6 bytes')
+    return buildSnowPacket(args, [SIGNET_URI_PREFIX, SIGNET_URI_VERSION, SIGNET_URI_SCOPE_DEFAULT, 'manager', Buffer.from(args.targetTuid).toString('hex').toUpperCase(), '0'])
+}
+
+export function buildSnowNodePacket(args: Omit<SnowPacketArgs, 'managerTuid'> & { deviceTuid: Uint8Array }): Buffer {
+    if (args.deviceTuid.length !== 6) throw new RangeError('deviceTuid must be 6 bytes')
+    return buildSnowPacket({ ...args, managerTuid: args.deviceTuid }, [SIGNET_URI_PREFIX, SIGNET_URI_VERSION, SIGNET_URI_SCOPE_DEFAULT, 'node', Buffer.from(args.deviceTuid).toString('hex').toUpperCase(), '0'])
+}
+
 export function buildSnowBeaconPacket(args: SnowBeaconArgs): Buffer {
     if (args.deviceTuid.length !== 6) throw new RangeError('deviceTuid must be 6 bytes')
     return buildSnowPacket(

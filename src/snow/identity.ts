@@ -36,6 +36,10 @@ export function publicKeyFromRaw(raw: Uint8Array): KeyObject {
     return createPublicKey({ key: { kty: 'EC', crv: 'P-256', x: base64UrlEncode(raw.subarray(1, 33)), y: base64UrlEncode(raw.subarray(33, 65)) }, format: 'jwk' })
 }
 
+export function verifyRawEcdsa(publicKey: Uint8Array, data: Uint8Array, signature: Uint8Array): boolean {
+    return signature.length === 64 && verify('sha256', Buffer.from(data), { key: publicKeyFromRaw(publicKey), dsaEncoding: 'ieee-p1363' }, Buffer.from(signature))
+}
+
 function base64UrlEncode(value: Uint8Array): string {
     return Buffer.from(value).toString('base64').replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '')
 }
